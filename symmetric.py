@@ -42,3 +42,5 @@ xof_absorb = kyber_shake128_absorb
 xof_squeezeblocks = shake128_squeezeblocks
 prf = kyber_shake256_prf
 kdf = shake256
+
+xof_state = SHAKE128.new
