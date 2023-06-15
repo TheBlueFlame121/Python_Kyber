@@ -340,8 +340,8 @@ def poly_basemul_montgomery(r:poly, a:poly, b:poly):
         r.coeffs[4*i+0] = temp[0]
         r.coeffs[4*i+1] = temp[1]
         basemul(temp, a.coeffs[4*i+2:4*i+4], b.coeffs[4*i+2:4*i+4], -zetas[64+i])
-        r.coeffs[4*i+2] = temp[2]
-        r.coeffs[4*i+3] = temp[3] 
+        r.coeffs[4*i+2] = temp[0]
+        r.coeffs[4*i+3] = temp[1] 
 
 
 #################################################
