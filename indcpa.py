@@ -143,6 +143,7 @@ def gen_matrix(a:List[polyvec], seed:List[int], transposed:int):
 
     for i in range(KYBER_K):
         for j in range(KYBER_K):
+            state = xof_state()
             if transposed:
                 xof_absorb(state, seed, i, j)
             else:
@@ -190,15 +191,16 @@ def indcpa_keypair(pk:List[int], sk:List[int]):
     e, pkpv, skpv = [polyvec() for _ in range(3)]
 
     buf = urandom(KYBER_SYMBYTES)
+    # buf = bytes(range(KYBER_SYMBYTES))
     buf = list(hash_g(buf))
 
-    gen_a(a, buf)
+    gen_a(a, buf[:KYBER_SYMBYTES])
 
     for i in range(KYBER_K):
-        poly_getnoise_eta1(skpv.vec[i], buf[256:], nonce)
+        poly_getnoise_eta1(skpv.vec[i], buf[KYBER_SYMBYTES:], nonce)
         nonce += 1
     for i in range(KYBER_K):
-        poly_getnoise_eta1(e.vec[i], buf[256:], nonce)
+        poly_getnoise_eta1(e.vec[i], buf[KYBER_SYMBYTES:], nonce)
         nonce += 1
 
     polyvec_ntt(skpv)
@@ -212,7 +214,7 @@ def indcpa_keypair(pk:List[int], sk:List[int]):
     polyvec_reduce(pkpv)
 
     pack_sk(sk, skpv)
-    pack_pk(pk, pkpv, buf)
+    pack_pk(pk, pkpv, buf[:KYBER_SYMBYTES])
 
 
 #################################################

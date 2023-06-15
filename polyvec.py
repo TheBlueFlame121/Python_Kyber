@@ -34,18 +34,18 @@ def polyvec_compress(r:List[int], a:polyvec):
                     t[k] = a.vec[i].coeffs[8*j+k]
                     t[k] += (t[k] >> 15) & KYBER_Q
                     t[k] = (((t[k] << 11) + KYBER_Q//2)//KYBER_Q) & 0x7ff
-            r[start + 0] = (t[0] >>  0)
-            r[start + 1] = (t[0] >>  8) | (t[1] << 3)
-            r[start + 2] = (t[1] >>  5) | (t[2] << 6)
-            r[start + 3] = (t[2] >>  2)
-            r[start + 4] = (t[2] >> 10) | (t[3] << 1)
-            r[start + 5] = (t[3] >>  7) | (t[4] << 4)
-            r[start + 6] = (t[4] >>  4) | (t[5] << 7)
-            r[start + 7] = (t[5] >>  1)
-            r[start + 8] = (t[5] >>  9) | (t[6] << 2)
-            r[start + 9] = (t[6] >>  6) | (t[7] << 5)
-            r[start +10] = (t[7] >>  3)
-            start += 11
+                r[start + 0] = (t[0] >>  0)               & 255
+                r[start + 1] = (t[0] >>  8) | (t[1] << 3) & 255
+                r[start + 2] = (t[1] >>  5) | (t[2] << 6) & 255
+                r[start + 3] = (t[2] >>  2)               & 255
+                r[start + 4] = (t[2] >> 10) | (t[3] << 1) & 255
+                r[start + 5] = (t[3] >>  7) | (t[4] << 4) & 255
+                r[start + 6] = (t[4] >>  4) | (t[5] << 7) & 255
+                r[start + 7] = (t[5] >>  1)               & 255
+                r[start + 8] = (t[5] >>  9) | (t[6] << 2) & 255
+                r[start + 9] = (t[6] >>  6) | (t[7] << 5) & 255
+                r[start +10] = (t[7] >>  3)               & 255
+                start += 11
 
     elif KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 320):
         start = 0
@@ -56,12 +56,12 @@ def polyvec_compress(r:List[int], a:polyvec):
                     t[k] = a.vec[i].coeffs[4*j+k]
                     t[k] += (t[k] >> 15) & KYBER_Q
                     t[k] = (((t[k] << 10) + KYBER_Q//2)//KYBER_Q) & 0x3ff
-            r[start + 0] = (t[0] >> 0)
-            r[start + 1] = (t[0] >> 8) | (t[1] << 2)
-            r[start + 2] = (t[1] >> 6) | (t[2] << 4)
-            r[start + 3] = (t[2] >> 4) | (t[3] << 6)
-            r[start + 4] = (t[3] >> 2)
-            start += 5
+                r[start + 0] = (t[0] >> 0)               & 255
+                r[start + 1] = (t[0] >> 8) | (t[1] << 2) & 255
+                r[start + 2] = (t[1] >> 6) | (t[2] << 4) & 255
+                r[start + 3] = (t[2] >> 4) | (t[3] << 6) & 255
+                r[start + 4] = (t[3] >> 2)               & 255
+                start += 5
 
 
 #################################################

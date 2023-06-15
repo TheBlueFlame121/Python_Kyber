@@ -85,6 +85,8 @@ def invntt(r:List[int]):
                 r[j+l] = fqmul(zeta, r[j+l])
             start = j + l + 1
         l <<= 1
+    for j in range(256):
+        r[j] = fqmul(r[j], f)
 
 
 #################################################

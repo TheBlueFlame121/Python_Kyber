@@ -42,4 +42,7 @@ def barrett_reduce(a:int) -> int:
     t = (v*a + (1<<25)) >> 26
     t *= KYBER_Q
     t %= (2**16)
-    return a - t
+    res = a - t
+    if res < -KYBER_Q:
+        res += 2**16
+    return res

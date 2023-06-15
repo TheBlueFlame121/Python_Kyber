@@ -133,10 +133,10 @@ def poly_compress(r:List[int], a:poly):
                 u += (u >> 15) & KYBER_Q
                 t[j] = (((u << 4) + KYBER_Q//2)//KYBER_Q) & 15
 
-            r[start + 0] = t[0] | (t[1] << 4)
-            r[start + 1] = t[2] | (t[3] << 4)
-            r[start + 2] = t[4] | (t[5] << 4)
-            r[start + 3] = t[6] | (t[7] << 4)
+            r[start + 0] = t[0] | (t[1] << 4) & 255
+            r[start + 1] = t[2] | (t[3] << 4) & 255
+            r[start + 2] = t[4] | (t[5] << 4) & 255
+            r[start + 3] = t[6] | (t[7] << 4) & 255
             start += 4;
 
     elif KYBER_POLYCOMPRESSEDBYTES == 160:
@@ -147,11 +147,11 @@ def poly_compress(r:List[int], a:poly):
                 u += (u >> 15) & KYBER_Q
                 t[j] = (((u << 5) + KYBER_Q//2)//KYBER_Q) & 31
 
-            r[start + 0] = (t[0] >> 0) | (t[1] << 5)
-            r[start + 1] = (t[1] >> 3) | (t[2] << 2) | (t[3] << 7)
-            r[start + 2] = (t[3] >> 1) | (t[4] << 4)
-            r[start + 3] = (t[4] >> 4) | (t[5] << 1) | (t[6] << 6)
-            r[start + 4] = (t[6] >> 2) | (t[7] << 3)
+            r[start + 0] = (t[0] >> 0) | (t[1] << 5)               & 255
+            r[start + 1] = (t[1] >> 3) | (t[2] << 2) | (t[3] << 7) & 255
+            r[start + 2] = (t[3] >> 1) | (t[4] << 4)               & 255
+            r[start + 3] = (t[4] >> 4) | (t[5] << 1) | (t[6] << 6) & 255
+            r[start + 4] = (t[6] >> 2) | (t[7] << 3)               & 255
             start += 5;
 
 
@@ -206,9 +206,9 @@ def poly_tobytes(r:List[int], a:poly):
         t0 += (t0 >> 15) & KYBER_Q
         t1 = a.coeffs[2*i+1]
         t1 += (t1 >> 15) & KYBER_Q
-        r[3*i+0] = (t0 >> 0)
-        r[3*i+1] = (t0 >> 8) | (t1 << 4)
-        r[3*i+2] = (t1 >> 4)
+        r[3*i+0] = (t0 >> 0)             & 255
+        r[3*i+1] = (t0 >> 8) | (t1 << 4) & 255
+        r[3*i+2] = (t1 >> 4)             & 255
 
 
 #################################################
