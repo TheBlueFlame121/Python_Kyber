@@ -1,0 +1,107 @@
+# Contains elements from kem.h and kem.c
+from verify import *
+from indcpa import *
+
+
+#################################################
+# Name:        crypto_kem_keypair
+#
+# Description: Generates public and private key
+#              for CCA-secure Kyber key encapsulation mechanism
+#
+# Arguments:   - List[int] pk: output public key
+#                (an already allocated array of KYBER_PUBLICKEYBYTES bytes)
+#              - List[int] sk: output private key
+#                (an already allocated array of KYBER_SECRETKEYBYTES bytes)
+#
+# Returns 0 (success)
+##################################################
+def crypto_kem_keypair(pk:List[int], sk:List[int]) -> int:
+    indcpa_keypair(pk, sk)
+    for i in range(KYBER_INDCPA_PUBLICKEYBYTES):
+        sk[i+KYBER_INDCPA_SECRETKEYBYTES] = pk[i]
+    temp = list(hash_h(bytes(pk)))
+    for i in range(2*KYBER_SYMBYTES):
+        sk[-2*KYBER_SYMBYTES+i] = temp[i]
+    temp = list(urandom(KYBER_SYMBYTES))
+    for i in range(KYBER_SYMBYTES):
+        sk[-KYBER_SYMBYTES+i] = temp[i]
+    return 0
+
+
+#################################################
+# Name:        crypto_kem_enc
+#
+# Description: Generates cipher text and shared
+#              secret for given public key
+#
+# Arguments:   - List[int] ct: output cipher text
+#                (an already allocated array of KYBER_CIPHERTEXTBYTES bytes)
+#              - List[int] ss: output shared secret
+#                (an already allocated array of KYBER_SSBYTES bytes)
+#              - List[int] pk: input public key
+#                (an already allocated array of KYBER_PUBLICKEYBYTES bytes)
+#
+# Returns 0 (success)
+##################################################
+def crypto_kem_enc(ct:List[int], ss:List[int], pk:List[int]) -> int:
+    buf = [0]*2*KYBER_SYMBYTES
+    kr = [0]*2*KYBER_SYMBYTES
+    
+    buf = list(urandom(KYBER_SYMBYTES))
+    buf = list(hash_h(bytes(buf)))
+
+    buf = buf[:KYBER_SYMBYTES] + list(hash_h(bytes(pk)))
+    kr = list(hash_g(bytes(buf)))
+
+    indcpa_enc(ct, buf, pk, kr[KYBER_SYMBYTES:])
+
+    kr = kr[:KYBER_SYMBYTES] + list(hash_h(bytes(ct)))
+    temp = list(kdf(bytes(kr), 2*KYBER_SYMBYTES))
+    for i in range(2*KYBER_SYMBYTES):
+        ss[i] = temp[i]
+
+    return 0
+
+
+#################################################
+# Name:        crypto_kem_dec
+#
+# Description: Generates shared secret for given
+#              cipher text and private key
+#
+# Arguments:   - List[int] ss: output shared secret
+#                (an already allocated array of KYBER_SSBYTES bytes)
+#              - List[int] ct: input cipher text
+#                (an already allocated array of KYBER_CIPHERTEXTBYTES bytes)
+#              - List[int] sk: input private key
+#                (an already allocated array of KYBER_SECRETKEYBYTES bytes)
+#
+# Returns 0.
+#
+# On failure, ss will contain a pseudo-random value.
+##################################################
+def crypto_kem_dec(ss:List[int], ct:List[int], sk:List[int]) -> int:
+    buf = [0]*2*KYBER_SYMBYTES
+    kr = [0]*2*KYBER_SYMBYTES
+    cmp = [0]*KYBER_CIPHERTEXTBYTES
+    pk = sk[KYBER_INDCPA_SECRETKEYBYTES:]
+
+    indcpa_dec(buf, ct, sk)
+
+    for i in range(KYBER_SYMBYTES):
+        buf[KYBER_SYMBYTES+i] = sk[KYBER_SECRETKEYBYTES - 2*KYBER_SYMBYTES + i]
+    kr = list(hash_g(bytes(buf)))
+
+    indcpa_enc(cmp, buf, pk, kr[KYBER_SYMBYTES:])
+
+    fail = verify(ct, cmp, KYBER_CIPHERTEXTBYTES)
+
+    kr = kr[:KYBER_SYMBYTES] + list(hash_h(bytes(ct)))
+
+    cmov(kr, sk[KYBER_SECRETKEYBYTES-KYBER_SYMBYTES:], KYBER_SYMBYTES, fail)
+
+    temp = list(kdf(bytes(kr), 2*KYBER_SYMBYTES))
+    for i in range(2*KYBER_SYMBYTES):
+        ss[i] = temp[i]
+    return 0
