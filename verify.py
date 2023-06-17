@@ -2,7 +2,7 @@
 from typing import List
 
 def verify(a:List[int], b:List[int], l:int):
-    return all([i == j for i, j in zip(a, b)])
+    return not all([i == j for i, j in zip(a, b)])
 
 
 def cmov(r:List[int], x:List[int], l:int, b:int):
