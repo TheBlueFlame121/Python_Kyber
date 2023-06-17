@@ -17,8 +17,8 @@ from os import urandom
 ##################################################
 def pack_pk(r:List[int], pk:polyvec, seed:List[int]):
     polyvec_tobytes(r, pk)
-    for i in range(KYBER_SYMBYTES):
-        r[i+KYBER_POLYVECBYTES] = seed[i]
+    for i in range(g.KYBER_SYMBYTES):
+        r[i+g.KYBER_POLYVECBYTES] = seed[i]
 
 
 #################################################
@@ -33,8 +33,8 @@ def pack_pk(r:List[int], pk:polyvec, seed:List[int]):
 ##################################################
 def unpack_pk(pk:polyvec, seed:List[int], packedpk:List[int]):
     polyvec_frombytes(pk, packedpk)
-    for i in range(KYBER_SYMBYTES):
-        seed[i] = packedpk[i+KYBER_POLYVECBYTES]
+    for i in range(g.KYBER_SYMBYTES):
+        seed[i] = packedpk[i+g.KYBER_POLYVECBYTES]
 
 
 #################################################
@@ -74,10 +74,10 @@ def unpack_sk(sk:polyvec, packedsk:List[int]):
 ##################################################
 def pack_ciphertext(r:List[int], b:polyvec, v:poly):
     polyvec_compress(r, b)
-    temp = [0]*KYBER_POLYCOMPRESSEDBYTES
+    temp = [0]*g.KYBER_POLYCOMPRESSEDBYTES
     poly_compress(temp, v)
-    for i in range(KYBER_POLYCOMPRESSEDBYTES):
-        r[KYBER_POLYVECCOMPRESSEDBYTES+i] = temp[i]
+    for i in range(g.KYBER_POLYCOMPRESSEDBYTES):
+        r[g.KYBER_POLYVECCOMPRESSEDBYTES+i] = temp[i]
 
 
 #################################################
@@ -92,7 +92,7 @@ def pack_ciphertext(r:List[int], b:polyvec, v:poly):
 ##################################################
 def unpack_ciphertext(b:polyvec, v:poly, c:List[int]):
     polyvec_decompress(b, c)
-    poly_decompress(v, c[KYBER_POLYVECCOMPRESSEDBYTES:])
+    poly_decompress(v, c[g.KYBER_POLYVECCOMPRESSEDBYTES:])
 
 
 #################################################
@@ -115,10 +115,10 @@ def rej_uniform(r:List[int], l:int, buf:List[int], buflen:int) -> int:
         val1 = ((buf[pos+1] >> 4) | (buf[pos+2] << 4)) & 0xFFF
         pos += 3
 
-        if val0 < KYBER_Q:
+        if val0 < g.KYBER_Q:
             r[ctr] = val0
             ctr += 1
-        if ctr<l and val1<KYBER_Q:
+        if ctr<l and val1<g.KYBER_Q:
             r[ctr] = val1
             ctr += 1
     return ctr
@@ -136,13 +136,13 @@ def rej_uniform(r:List[int], l:int, buf:List[int], buflen:int) -> int:
 #              - const uint8_t *seed: pointer to input seed
 #              - int transposed: boolean deciding whether A or A^T is generated
 ##################################################
-GEN_MATRIX_NBLOCKS = ((12*KYBER_N//8*(1 << 12)//KYBER_Q + XOF_BLOCKBYTES)//XOF_BLOCKBYTES)
+GEN_MATRIX_NBLOCKS = ((12*g.KYBER_N//8*(1 << 12)//g.KYBER_Q + XOF_BLOCKBYTES)//XOF_BLOCKBYTES)
 def gen_matrix(a:List[polyvec], seed:List[int], transposed:int):
     buf = [0]*(GEN_MATRIX_NBLOCKS*XOF_BLOCKBYTES+2)
     state = xof_state()
 
-    for i in range(KYBER_K):
-        for j in range(KYBER_K):
+    for i in range(g.KYBER_K):
+        for j in range(g.KYBER_K):
             state = xof_state()
             if transposed:
                 xof_absorb(state, seed, i, j)
@@ -151,17 +151,17 @@ def gen_matrix(a:List[polyvec], seed:List[int], transposed:int):
 
             buf = xof_squeezeblocks(GEN_MATRIX_NBLOCKS, state)
             buflen = GEN_MATRIX_NBLOCKS*XOF_BLOCKBYTES
-            ctr = rej_uniform(a[i].vec[j].coeffs, KYBER_N, buf, buflen)
+            ctr = rej_uniform(a[i].vec[j].coeffs, g.KYBER_N, buf, buflen)
 
-            while (ctr < KYBER_N):
+            while (ctr < g.KYBER_N):
                 off = buflen % 3
                 for k in range(off):
                     buf[k] = buf[buflen - off + k]
                 buf = buf[:off] + xof_squeezeblocks(1, state)
                 buflen = off + XOF_BLOCKBYTES
-                temp = [0]*(KYBER_N - ctr)
-                ctr1 = rej_uniform(temp, KYBER_N - ctr, buf, buflen)
-                for index in range(KYBER_N-ctr):
+                temp = [0]*(g.KYBER_N - ctr)
+                ctr1 = rej_uniform(temp, g.KYBER_N - ctr, buf, buflen)
+                for index in range(g.KYBER_N-ctr):
                     a[i].vec[j].coeffs[ctr+index] = temp[index]
                 ctr += ctr1
 
@@ -185,28 +185,28 @@ def gen_at(A, B):
 #                             (of length KYBER_INDCPA_SECRETKEYBYTES bytes)
 ##################################################
 def indcpa_keypair(pk:List[int], sk:List[int]):
-    buf = [0]*2*KYBER_SYMBYTES
+    buf = [0]*2*g.KYBER_SYMBYTES
     nonce = 0
-    a = [polyvec() for _ in range(KYBER_K)]
+    a = [polyvec() for _ in range(g.KYBER_K)]
     e, pkpv, skpv = [polyvec() for _ in range(3)]
 
-    buf = urandom(KYBER_SYMBYTES)
+    buf = urandom(g.KYBER_SYMBYTES)
     # buf = bytes(range(KYBER_SYMBYTES))
     buf = list(hash_g(buf))
 
-    gen_a(a, buf[:KYBER_SYMBYTES])
+    gen_a(a, buf[:g.KYBER_SYMBYTES])
 
-    for i in range(KYBER_K):
-        poly_getnoise_eta1(skpv.vec[i], buf[KYBER_SYMBYTES:], nonce)
+    for i in range(g.KYBER_K):
+        poly_getnoise_eta1(skpv.vec[i], buf[g.KYBER_SYMBYTES:], nonce)
         nonce += 1
-    for i in range(KYBER_K):
-        poly_getnoise_eta1(e.vec[i], buf[KYBER_SYMBYTES:], nonce)
+    for i in range(g.KYBER_K):
+        poly_getnoise_eta1(e.vec[i], buf[g.KYBER_SYMBYTES:], nonce)
         nonce += 1
 
     polyvec_ntt(skpv)
     polyvec_ntt(e)
 
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         polyvec_basemul_acc_montgomery(pkpv.vec[i], a[i], skpv)
         poly_tomont(pkpv.vec[i])
 
@@ -214,7 +214,7 @@ def indcpa_keypair(pk:List[int], sk:List[int]):
     polyvec_reduce(pkpv)
 
     pack_sk(sk, skpv)
-    pack_pk(pk, pkpv, buf[:KYBER_SYMBYTES])
+    pack_pk(pk, pkpv, buf[:g.KYBER_SYMBYTES])
 
 
 #################################################
@@ -234,9 +234,9 @@ def indcpa_keypair(pk:List[int], sk:List[int]):
 #                                 generate all randomness
 ##################################################
 def indcpa_enc(c:List[int], m:List[int], pk:List[int], coins:List[int]):
-    seed = [0]*KYBER_SYMBYTES
+    seed = [0]*g.KYBER_SYMBYTES
     nonce = 0
-    at = [polyvec() for _ in range(KYBER_K)]
+    at = [polyvec() for _ in range(g.KYBER_K)]
     sp, pkpv, ep, b = [polyvec() for _ in range(4)]
     v, k, epp = [poly() for _ in range(3)]
 
@@ -244,10 +244,10 @@ def indcpa_enc(c:List[int], m:List[int], pk:List[int], coins:List[int]):
     poly_frommsg(k, m)
     gen_at(at, seed)
 
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         poly_getnoise_eta1(sp.vec[i], coins, nonce)
         nonce += 1
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         poly_getnoise_eta2(ep.vec[i], coins, nonce)
         nonce += 1
     poly_getnoise_eta2(epp, coins, nonce)
@@ -255,7 +255,7 @@ def indcpa_enc(c:List[int], m:List[int], pk:List[int], coins:List[int]):
 
     polyvec_ntt(sp)
 
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         polyvec_basemul_acc_montgomery(b.vec[i], at[i], sp)
 
     polyvec_basemul_acc_montgomery(v, pkpv, sp)

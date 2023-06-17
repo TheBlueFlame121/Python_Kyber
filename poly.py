@@ -10,11 +10,11 @@ class poly:
 
     def __init__(self, inp: list[int] = None):
         if inp is None:
-            inp = [0 for _ in range(KYBER_N)]
-        if len(inp) > KYBER_N:
+            inp = [0 for _ in range(g.KYBER_N)]
+        if len(inp) > g.KYBER_N:
             raise ValueError("Polynomial can't have more than N coeffs")
-        if len(inp) < KYBER_N:
-            inp = inp + [0 for _ in range(KYBER_N-len(inp))].copy()
+        if len(inp) < g.KYBER_N:
+            inp = inp + [0 for _ in range(g.KYBER_N-len(inp))].copy()
         self.coeffs = inp
 
 
@@ -65,7 +65,7 @@ def load24_littleendian(x:List[int]) -> int:
 #              - List[int] buf: input byte array
 ##################################################
 def cbd2(r:poly, buf:List[int]):
-    for i in range(KYBER_N//8):
+    for i in range(g.KYBER_N//8):
         t = load32_littleendian(buf[4*i:4*(i+1)])
         d = t & 0x55555555
         d += (t>>1) & 0x55555555
@@ -88,7 +88,7 @@ def cbd2(r:poly, buf:List[int]):
 #              - List[int] buf: input byte array
 ##################################################
 def cbd3(r:poly, buf:List[int]):
-    for i in range(KYBER_N//4):
+    for i in range(g.KYBER_N//4):
         t = load24_littleendian(buf[3*i:3*(i+1)])
         d = t & 0x00249249
         d += (t>>1) & 0x00249249
@@ -101,16 +101,16 @@ def cbd3(r:poly, buf:List[int]):
 
 
 def poly_cbd_eta1(r:poly, buf:List[int]):
-    assert KYBER_ETA1 in [2, 3] and "This implementation requires eta1 in {2,3}"
-    if KYBER_ETA1 == 2:
+    assert g.KYBER_ETA1 in [2, 3] and "This implementation requires eta1 in {2,3}"
+    if g.KYBER_ETA1 == 2:
         cbd2(r, buf)
-    elif KYBER_ETA1 == 3:
+    elif g.KYBER_ETA1 == 3:
         cbd3(r, buf)
 
 
 def poly_cbd_eta2(r:poly, buf:List[int]):
-    assert KYBER_ETA2 == 2 and "This implementation requires eta2 = 2"
-    if KYBER_ETA2 == 2:
+    assert g.KYBER_ETA2 == 2 and "This implementation requires eta2 = 2"
+    if g.KYBER_ETA2 == 2:
         cbd2(r, buf)
 
 
@@ -125,13 +125,13 @@ def poly_cbd_eta2(r:poly, buf:List[int]):
 ##################################################
 def poly_compress(r:List[int], a:poly):
     t = [0]*8
-    if KYBER_POLYCOMPRESSEDBYTES == 128:
+    if g.KYBER_POLYCOMPRESSEDBYTES == 128:
         start = 0
-        for i in range(KYBER_N//8):
+        for i in range(g.KYBER_N//8):
             for j in range(8):
                 u = a.coeffs[8*i+j]
-                u += (u >> 15) & KYBER_Q
-                t[j] = (((u << 4) + KYBER_Q//2)//KYBER_Q) & 15
+                u += (u >> 15) & g.KYBER_Q
+                t[j] = (((u << 4) + g.KYBER_Q//2)//g.KYBER_Q) & 15
 
             r[start + 0] = t[0] | (t[1] << 4) & 255
             r[start + 1] = t[2] | (t[3] << 4) & 255
@@ -139,13 +139,13 @@ def poly_compress(r:List[int], a:poly):
             r[start + 3] = t[6] | (t[7] << 4) & 255
             start += 4;
 
-    elif KYBER_POLYCOMPRESSEDBYTES == 160:
+    elif g.KYBER_POLYCOMPRESSEDBYTES == 160:
         start = 0
-        for i in range(KYBER_N//8):
+        for i in range(g.KYBER_N//8):
             for j in range(8):
                 u = a.coeffs[8*i+j]
-                u += (u >> 15) & KYBER_Q
-                t[j] = (((u << 5) + KYBER_Q//2)//KYBER_Q) & 31
+                u += (u >> 15) & g.KYBER_Q
+                t[j] = (((u << 5) + g.KYBER_Q//2)//g.KYBER_Q) & 31
 
             r[start + 0] = (t[0] >> 0) | (t[1] << 5)               & 255
             r[start + 1] = (t[1] >> 3) | (t[2] << 2) | (t[3] << 7) & 255
@@ -166,17 +166,17 @@ def poly_compress(r:List[int], a:poly):
 #                             (of length KYBER_POLYCOMPRESSEDBYTES bytes)
 ##################################################
 def poly_decompress(r:poly, a:List[int]):
-    if KYBER_POLYCOMPRESSEDBYTES == 128:
+    if g.KYBER_POLYCOMPRESSEDBYTES == 128:
         start = 0
-        for i in range(KYBER_N//2):
-            r.coeffs[2*i+0] = (((a[start + 0] & 15)*KYBER_Q) + 8) >> 4
-            r.coeffs[2*i+1] = (((a[start + 0] >> 4)*KYBER_Q) + 8) >> 4
+        for i in range(g.KYBER_N//2):
+            r.coeffs[2*i+0] = (((a[start + 0] & 15)*g.KYBER_Q) + 8) >> 4
+            r.coeffs[2*i+1] = (((a[start + 0] >> 4)*g.KYBER_Q) + 8) >> 4
             start += 1
 
-    elif KYBER_POLYCOMPRESSEDBYTES == 160:
+    elif g.KYBER_POLYCOMPRESSEDBYTES == 160:
         t = [0]*8
         start = 0
-        for i in range(KYBER_N//8):
+        for i in range(g.KYBER_N//8):
             t[0] = (a[start + 0] >> 0);
             t[1] = (a[start + 0] >> 5) | (a[start + 1] << 3);
             t[2] = (a[start + 1] >> 2);
@@ -188,7 +188,7 @@ def poly_decompress(r:poly, a:List[int]):
             start += 5;
 
             for j in range(8):
-                r.coeffs[8*i+j] = ((t[j] & 31)*KYBER_Q + 16) >> 5
+                r.coeffs[8*i+j] = ((t[j] & 31)*g.KYBER_Q + 16) >> 5
 
 
 #################################################
@@ -201,11 +201,11 @@ def poly_decompress(r:poly, a:List[int]):
 #              - poly a: input polynomial
 ##################################################
 def poly_tobytes(r:List[int], a:poly):
-    for i in range(KYBER_N//2):
+    for i in range(g.KYBER_N//2):
         t0 = a.coeffs[2*i]
-        t0 += (t0 >> 15) & KYBER_Q
+        t0 += (t0 >> 15) & g.KYBER_Q
         t1 = a.coeffs[2*i+1]
-        t1 += (t1 >> 15) & KYBER_Q
+        t1 += (t1 >> 15) & g.KYBER_Q
         r[3*i+0] = (t0 >> 0)             & 255
         r[3*i+1] = (t0 >> 8) | (t1 << 4) & 255
         r[3*i+2] = (t1 >> 4)             & 255
@@ -222,7 +222,7 @@ def poly_tobytes(r:List[int], a:poly):
 #                                  (of KYBER_POLYBYTES bytes)
 ##################################################
 def poly_frombytes(r:poly, a:List[int]):
-    for i in range(KYBER_N//2):
+    for i in range(g.KYBER_N//2):
         r.coeffs[2*i]   = ((a[3*i+0] >> 0) | (a[3*i+1] << 8)) & 0xFFF
         r.coeffs[2*i+1] = ((a[3*i+1] >> 4) | (a[3*i+2] << 4)) & 0xFFF
 
@@ -236,11 +236,11 @@ def poly_frombytes(r:poly, a:List[int]):
 #              - List[int] msg: input message
 ##################################################
 def poly_frommsg(r:poly, msg:List[int]):
-    assert KYBER_INDCPA_MSGBYTES == KYBER_N//8
-    for i in range(KYBER_N//8):
+    assert g.KYBER_INDCPA_MSGBYTES == g.KYBER_N//8
+    for i in range(g.KYBER_N//8):
         for j in range(8):
             mask = -((msg[i] >> j)&1)
-            r.coeffs[8*i+j] = mask & ((KYBER_Q+1)//2)
+            r.coeffs[8*i+j] = mask & ((g.KYBER_Q+1)//2)
 
 
 #################################################
@@ -252,12 +252,12 @@ def poly_frommsg(r:poly, msg:List[int]):
 #              - poly a: input polynomial
 ##################################################
 def poly_tomsg(msg:List[int], a:poly):
-    for i in range(KYBER_N//8):
+    for i in range(g.KYBER_N//8):
         msg[i] = 0
         for j in range(8):
             t = a.coeffs[8*i+j]
-            t += (t >> 15) & KYBER_Q
-            t = (((t << 1) + KYBER_Q//2)//KYBER_Q) & 1
+            t += (t >> 15) & g.KYBER_Q
+            t = (((t << 1) + g.KYBER_Q//2)//g.KYBER_Q) & 1
             msg[i] |= t << j
 
 
@@ -274,7 +274,7 @@ def poly_tomsg(msg:List[int], a:poly):
 #              - int nonce: one-byte input nonce
 ##################################################
 def poly_getnoise_eta1(r:poly, seed:List[int], nonce:int):
-    buf = [0]*(KYBER_ETA1*KYBER_N//4)
+    buf = [0]*(g.KYBER_ETA1*g.KYBER_N//4)
     prf(buf, len(buf), seed, nonce)
     poly_cbd_eta1(r, buf)
 
@@ -292,7 +292,7 @@ def poly_getnoise_eta1(r:poly, seed:List[int], nonce:int):
 #              - int nonce: one-byte input nonce
 ##################################################
 def poly_getnoise_eta2(r:poly, seed:List[int], nonce:int):
-    buf = [0]*(KYBER_ETA2*KYBER_N//4)
+    buf = [0]*(g.KYBER_ETA2*g.KYBER_N//4)
     prf(buf, len(buf), seed, nonce)
     poly_cbd_eta2(r, buf)
 
@@ -335,7 +335,7 @@ def poly_invntt_tomont(r:poly):
 ##################################################
 def poly_basemul_montgomery(r:poly, a:poly, b:poly):
     temp = [0]*2
-    for i in range(KYBER_N//4):
+    for i in range(g.KYBER_N//4):
         basemul(temp, a.coeffs[4*i:4*i+2], b.coeffs[4*i:4*i+2], zetas[64+i])
         r.coeffs[4*i+0] = temp[0]
         r.coeffs[4*i+1] = temp[1]
@@ -353,8 +353,8 @@ def poly_basemul_montgomery(r:poly, a:poly, b:poly):
 # Arguments:   - poly r: input/output polynomial
 ##################################################
 def poly_tomont(r:poly):
-    f = (1<<32) % KYBER_Q
-    for i in range(KYBER_N):
+    f = (1<<32) % g.KYBER_Q
+    for i in range(g.KYBER_N):
         r.coeffs[i] = montgomery_reduce(r.coeffs[i]*f)
 
 
@@ -367,7 +367,7 @@ def poly_tomont(r:poly):
 # Arguments:   - poly r: input/output polynomial
 ##################################################
 def poly_reduce(r:poly):
-    for i in range(KYBER_N):
+    for i in range(g.KYBER_N):
         r.coeffs[i] = barrett_reduce(r.coeffs[i])
 
 
@@ -381,7 +381,7 @@ def poly_reduce(r:poly):
 #            - poly b: second input polynomial
 ##################################################
 def poly_add(r:poly, a:poly, b:poly):
-    for i in range(KYBER_N):
+    for i in range(g.KYBER_N):
         r.coeffs[i] = a.coeffs[i] + b.coeffs[i]
 
 
@@ -395,5 +395,5 @@ def poly_add(r:poly, a:poly, b:poly):
 #            - poly b: second input polynomial
 ##################################################
 def poly_sub(r:poly, a:poly, b:poly):
-    for i in range(KYBER_N):
+    for i in range(g.KYBER_N):
         r.coeffs[i] = a.coeffs[i] - b.coeffs[i]

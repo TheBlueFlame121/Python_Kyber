@@ -19,10 +19,10 @@ QINV = -3327 # q^-1 mod 2^16
 ##################################################
 def montgomery_reduce(a:int) -> int:
     t = (a*QINV)%(2**16)
-    t = (a - t*KYBER_Q) >> 16
-    t += KYBER_Q
-    if t > (KYBER_Q>>1):
-        t -= KYBER_Q
+    t = (a - t*g.KYBER_Q) >> 16
+    t += g.KYBER_Q
+    if t > (g.KYBER_Q>>1):
+        t -= g.KYBER_Q
     return t
 
 
@@ -37,12 +37,12 @@ def montgomery_reduce(a:int) -> int:
 # Returns:     integer in {-(q-1)/2,...,(q-1)/2} congruent to a modulo q.
 ##################################################
 def barrett_reduce(a:int) -> int:
-    v = ((1<<26) + KYBER_Q//2)//KYBER_Q
+    v = ((1<<26) + g.KYBER_Q//2)//g.KYBER_Q
 
     t = (v*a + (1<<25)) >> 26
-    t *= KYBER_Q
+    t *= g.KYBER_Q
     t %= (2**16)
     res = a - t
-    if res < -KYBER_Q:
+    if res < -g.KYBER_Q:
         res += 2**16
     return res

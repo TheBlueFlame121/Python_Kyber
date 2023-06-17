@@ -7,11 +7,11 @@ class polyvec:
 
     def __init__(self, inp: list[poly] = None):
         if inp is None:
-            inp = [poly() for _ in range(KYBER_K)]
-        if len(inp) > KYBER_K:
-            raise ValueError("Polynomial Vector L can't have more than L polys")
-        if len(inp) < KYBER_K:
-            inp = inp + [poly() for _ in range(KYBER_K-len(inp))].copy()
+            inp = [poly() for _ in range(g.KYBER_K)]
+        if len(inp) > g.KYBER_K:
+            raise ValueError("Polynomial Vector can't have more than N polys")
+        if len(inp) < g.KYBER_K:
+            inp = inp + [poly() for _ in range(g.KYBER_K-len(inp))].copy()
         self.vec = inp
 
 
@@ -25,15 +25,15 @@ class polyvec:
 #              - polyvec a: input vector of polynomials
 ##################################################
 def polyvec_compress(r:List[int], a:polyvec):
-    if KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 352):
+    if g.KYBER_POLYVECCOMPRESSEDBYTES == (g.KYBER_K * 352):
         start = 0
         t = [0]*8
-        for i in range(KYBER_K):
-            for j in range(KYBER_N//8):
+        for i in range(g.KYBER_K):
+            for j in range(g.KYBER_N//8):
                 for k in range(8):
                     t[k] = a.vec[i].coeffs[8*j+k]
-                    t[k] += (t[k] >> 15) & KYBER_Q
-                    t[k] = (((t[k] << 11) + KYBER_Q//2)//KYBER_Q) & 0x7ff
+                    t[k] += (t[k] >> 15) & g.KYBER_Q
+                    t[k] = (((t[k] << 11) + g.KYBER_Q//2)//g.KYBER_Q) & 0x7ff
                 r[start + 0] = (t[0] >>  0)               & 255
                 r[start + 1] = (t[0] >>  8) | (t[1] << 3) & 255
                 r[start + 2] = (t[1] >>  5) | (t[2] << 6) & 255
@@ -47,15 +47,15 @@ def polyvec_compress(r:List[int], a:polyvec):
                 r[start +10] = (t[7] >>  3)               & 255
                 start += 11
 
-    elif KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 320):
+    elif g.KYBER_POLYVECCOMPRESSEDBYTES == (g.KYBER_K * 320):
         start = 0
         t = [0]*4
-        for i in range(KYBER_K):
-            for j in range(KYBER_N//4):
+        for i in range(g.KYBER_K):
+            for j in range(g.KYBER_N//4):
                 for k in range(4):
                     t[k] = a.vec[i].coeffs[4*j+k]
-                    t[k] += (t[k] >> 15) & KYBER_Q
-                    t[k] = (((t[k] << 10) + KYBER_Q//2)//KYBER_Q) & 0x3ff
+                    t[k] += (t[k] >> 15) & g.KYBER_Q
+                    t[k] = (((t[k] << 10) + g.KYBER_Q//2)//g.KYBER_Q) & 0x3ff
                 r[start + 0] = (t[0] >> 0)               & 255
                 r[start + 1] = (t[0] >> 8) | (t[1] << 2) & 255
                 r[start + 2] = (t[1] >> 6) | (t[2] << 4) & 255
@@ -75,11 +75,11 @@ def polyvec_compress(r:List[int], a:polyvec):
 #                             (of length KYBER_POLYVECCOMPRESSEDBYTES)
 ##################################################
 def polyvec_decompress(r:polyvec, a:List[int]):
-    if KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 352):
+    if g.KYBER_POLYVECCOMPRESSEDBYTES == (g.KYBER_K * 352):
         start = 0
         t = [0]*8
-        for i in range(KYBER_K):
-            for j in range(KYBER_N//8):
+        for i in range(g.KYBER_K):
+            for j in range(g.KYBER_N//8):
                 t[0] = (a[start + 0] >> 0) | (a[start +  1] << 8)
                 t[1] = (a[start + 1] >> 3) | (a[start +  2] << 5)
                 t[2] = (a[start + 2] >> 6) | (a[start +  3] << 2) | (a[start+4] << 10)
@@ -91,13 +91,13 @@ def polyvec_decompress(r:polyvec, a:List[int]):
                 start += 11
                 
                 for k in range(8):
-                    r.vec[i].coeffs[8*j+k] = ((t[k] & 0x7ff)*KYBER_Q + 1024) >> 11
+                    r.vec[i].coeffs[8*j+k] = ((t[k] & 0x7ff)*g.KYBER_Q + 1024) >> 11
 
-    elif KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 320):
+    elif g.KYBER_POLYVECCOMPRESSEDBYTES == (g.KYBER_K * 320):
         start = 0
         t = [0]*4
-        for i in range(KYBER_K):
-            for j in range(KYBER_N//4):
+        for i in range(g.KYBER_K):
+            for j in range(g.KYBER_N//4):
                 t[0] = (a[start + 0] >> 0) | (a[start + 1] << 8);
                 t[1] = (a[start + 1] >> 2) | (a[start + 2] << 6);
                 t[2] = (a[start + 2] >> 4) | (a[start + 3] << 4);
@@ -105,7 +105,7 @@ def polyvec_decompress(r:polyvec, a:List[int]):
                 start += 5;
 
                 for k in range(4):
-                    r.vec[i].coeffs[4*j+k] = ((t[k] & 0x3ff)*KYBER_Q + 512) >> 10
+                    r.vec[i].coeffs[4*j+k] = ((t[k] & 0x3ff)*g.KYBER_Q + 512) >> 10
 
 
 #################################################
@@ -118,11 +118,11 @@ def polyvec_decompress(r:polyvec, a:List[int]):
 #              - polyvec a: input vector of polynomials
 ##################################################
 def polyvec_tobytes(r:List[int], a:polyvec):
-    temp = [0]*KYBER_POLYBYTES
-    for i in range(KYBER_K):
+    temp = [0]*g.KYBER_POLYBYTES
+    for i in range(g.KYBER_K):
         poly_tobytes(temp, a.vec[i])
-        for j in range(KYBER_POLYBYTES):
-            r[i*KYBER_POLYBYTES+j] = temp[j]
+        for j in range(g.KYBER_POLYBYTES):
+            r[i*g.KYBER_POLYBYTES+j] = temp[j]
 
 
 #################################################
@@ -136,8 +136,8 @@ def polyvec_tobytes(r:List[int], a:polyvec):
 #                             (of length KYBER_POLYVECBYTES)
 ##################################################
 def polyvec_frombytes(r:polyvec, a:List[int]):
-    for i in range(KYBER_K):
-        poly_frombytes(r.vec[i], a[i*KYBER_POLYBYTES:(i+1)*KYBER_POLYBYTES])
+    for i in range(g.KYBER_K):
+        poly_frombytes(r.vec[i], a[i*g.KYBER_POLYBYTES:(i+1)*g.KYBER_POLYBYTES])
 
 
 #################################################
@@ -148,7 +148,7 @@ def polyvec_frombytes(r:polyvec, a:List[int]):
 # Arguments:   - polyvec *r: pointer to in/output vector of polynomials
 ##################################################
 def polyvec_ntt(r:polyvec):
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         poly_ntt(r.vec[i])
 
 
@@ -161,7 +161,7 @@ def polyvec_ntt(r:polyvec):
 # Arguments:   - polyvec r: in/output vector of polynomials
 ##################################################
 def polyvec_invntt_tomont(r:polyvec):
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         poly_invntt_tomont(r.vec[i])
 
 
@@ -178,7 +178,7 @@ def polyvec_invntt_tomont(r:polyvec):
 def polyvec_basemul_acc_montgomery(r:poly, a:polyvec, b:polyvec):
     t = poly()
     poly_basemul_montgomery(r, a.vec[0], b.vec[0])
-    for i in range(1, KYBER_K):
+    for i in range(1, g.KYBER_K):
         poly_basemul_montgomery(t, a.vec[i], b.vec[i])
         poly_add(r, r, t)
     poly_reduce(r)
@@ -194,7 +194,7 @@ def polyvec_basemul_acc_montgomery(r:poly, a:polyvec, b:polyvec):
 # Arguments:   - polyvec r: input/output polynomial
 ##################################################
 def polyvec_reduce(r:polyvec):
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         poly_reduce(r.vec[i])
 
 
@@ -208,5 +208,5 @@ def polyvec_reduce(r:polyvec):
 #            - polyvec b: second input vector of polynomials
 ##################################################
 def polyvec_add(r:polyvec, a:polyvec, b:polyvec):
-    for i in range(KYBER_K):
+    for i in range(g.KYBER_K):
         poly_add(r.vec[i], a.vec[i], b.vec[i])
