@@ -184,15 +184,17 @@ def gen_at(A, B):
 #              - List[int] sk: output private key
 #                             (of length KYBER_INDCPA_SECRETKEYBYTES bytes)
 ##################################################
-def indcpa_keypair(pk:List[int], sk:List[int]):
+def indcpa_keypair(pk:List[int], sk:List[int], seed:List[int]=None):
     buf = [0]*2*g.KYBER_SYMBYTES
     nonce = 0
     a = [polyvec() for _ in range(g.KYBER_K)]
     e, pkpv, skpv = [polyvec() for _ in range(3)]
 
-    buf = urandom(g.KYBER_SYMBYTES)
+    if seed is None:
+        seed = list(urandom(g.KYBER_SYMBYTES))
+    assert len(seed) == g.KYBER_SYMBYTES
     # buf = bytes(range(KYBER_SYMBYTES))
-    buf = list(hash_g(buf))
+    buf = list(hash_g(bytes(seed)))
 
     gen_a(a, buf[:g.KYBER_SYMBYTES])
 

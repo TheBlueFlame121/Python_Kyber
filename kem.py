@@ -16,18 +16,19 @@ from indcpa import *
 #
 # Returns 0 (success)
 ##################################################
-def crypto_kem_keypair(pk:List[int], sk:List[int]) -> int:
-    indcpa_keypair(pk, sk)
+def crypto_kem_keypair(pk:List[int], sk:List[int], key_seed:List[int]=None, z:List[int]=None) -> int:
+    indcpa_keypair(pk, sk, key_seed)
     for i in range(g.KYBER_INDCPA_PUBLICKEYBYTES):
         sk[i+g.KYBER_INDCPA_SECRETKEYBYTES] = pk[i]
     temp = list(hash_h(bytes(pk)))
     for i in range(g.KYBER_SYMBYTES):
         sk[-2*g.KYBER_SYMBYTES+i] = temp[i]
     # Value z for pseudo-random output on reject
-    temp = list(urandom(g.KYBER_SYMBYTES))
+    if z is None:
+        z = list(urandom(g.KYBER_SYMBYTES))
     # temp = list(range(KYBER_SYMBYTES))
     for i in range(g.KYBER_SYMBYTES):
-        sk[-g.KYBER_SYMBYTES+i] = temp[i]
+        sk[-g.KYBER_SYMBYTES+i] = z[i]
     return 0
 
 
@@ -46,15 +47,16 @@ def crypto_kem_keypair(pk:List[int], sk:List[int]) -> int:
 #
 # Returns 0 (success)
 ##################################################
-def crypto_kem_enc(ct:List[int], ss:List[int], pk:List[int]) -> int:
+def crypto_kem_enc(ct:List[int], ss:List[int], pk:List[int], seed:List[int]=None) -> int:
     buf = [0]*2*g.KYBER_SYMBYTES
     # Will contain key, coins
     kr = [0]*2*g.KYBER_SYMBYTES
     
-    buf = list(urandom(g.KYBER_SYMBYTES))
+    if seed is None:
+        seed = list(urandom(g.KYBER_SYMBYTES))
     # buf = list(range(32))
     # Don't release system RNG output
-    buf = list(hash_h(bytes(buf)))
+    buf = list(hash_h(bytes(seed)))
 
     # Multitarget countermeasure for coins + contributory KEM
     buf = buf[:g.KYBER_SYMBYTES] + list(hash_h(bytes(pk)))
