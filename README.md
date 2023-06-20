@@ -86,7 +86,7 @@ The key generation and encapsulation functions accept additional arguments to re
 
 Because everyone needs numbers:
 
-| 500 Iterations  | Kyber 512 | Kyber 768 | Kyber 1024 |
+| 1000 Iterations | Kyber 512 | Kyber 768 | Kyber 1024 |
 |-----------------|-----------|-----------|------------|
 | key generation  |  3.437s   |  5.866s   |   8.665s   |
 | encapsulation   |  4.932s   |  7.692s   |  10.985s   |
